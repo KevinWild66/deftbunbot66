@@ -1,51 +1,25 @@
-from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask, request
-
-TOKEN = "7362610114:AAHRCtTThfAs0Q-mZjAVqlSotwiLhxlRIzs"
-CHANNEL_USERNAME = "@deftbuncrypto"
-PRIVATE_CHAT_LINK = "https://t.me/+QHPRPFA4sPlmNjYy"
+from telegram import Bot, Update
+from telegram.ext import Dispatcher, CommandHandler, CallbackContext
 
 app = Flask(__name__)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("Подтвердить подписку", callback_data='check_subscription')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "Пожалуйста, подпишитесь на канал и подтвердите подписку, чтобы получить доступ к чату.", 
-        reply_markup=reply_markup
-    )
+TOKEN = '7362610114:AAHRCtTThfAs0Q-mZjAVqlSotwiLhxlRIzs'
+bot = Bot(token=TOKEN)
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+@app.route('/' + TOKEN, methods=['POST'])
+def respond():
+    update = Update.de_json(request.get_json(force=True), bot)
+    dispatcher.process_update(update)
+    return 'ok'
 
-    user = query.from_user
-    bot = context.bot
-    member_status = await bot.get_chat_member(chat_id=CHANNEL_USERNAME, user_id=user.id)
+dispatcher = Dispatcher(bot, None, use_context=True)
 
-    if member_status.status in ['member', 'administrator', 'creator']:
-        await query.edit_message_text(text=f"Спасибо за подписку! Вот ссылка на чат: {PRIVATE_CHAT_LINK}")
-    else:
-        await query.edit_message_text(text="Пожалуйста, подпишитесь на канал, чтобы получить доступ к чату.")
+# Команды и обработчики
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text('Привет! Подпишитесь на канал и получите доступ к чату.')
 
-async def main():
-    application = Application.builder().token(TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(button))
-
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), Bot(TOKEN))
-    asyncio.run(main())
-    return "OK"
+dispatcher.add_handler(CommandHandler('start', start))
 
 if __name__ == "__main__":
     app.run(debug=True)
