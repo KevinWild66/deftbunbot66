@@ -1,29 +1,33 @@
 from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-TOKEN = 7362610114:AAHRCtTThfAs0Q-mZjAVqlSotwiLhxlRIzs
-CHANNEL_USERNAME = @deftbuncrypto
-PRIVATE_CHAT_LINK = https://t.me/+QHPRPFA4sPlmNjYy
+TOKEN = "7362610114:AAHRCtTThfAs0Q-mZjAVqlSotwiLhxlRIzs"
+CHANNEL_USERNAME = "@deftbuncrypto"
+PRIVATE_CHAT_LINK = "https://t.me/+QHPRPFA4sPlmNjYy"
 
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
-    bot = Bot(TOKEN)
+    bot = context.bot
 
-    member_status = bot.get_chat_member(chat_id=CHANNEL_USERNAME, user_id=user.id).status
+    member_status = await bot.get_chat_member(chat_id=CHANNEL_USERNAME, user_id=user.id)
 
-    if member_status in ['member', 'administrator', 'creator']:
-        update.message.reply_text(f"Спасибо за подписку! Вот ссылка на чат: {PRIVATE_CHAT_LINK}")
+    if member_status.status in ['member', 'administrator', 'creator']:
+        await update.message.reply_text(f"Спасибо за подписку! Вот ссылка на чат: {PRIVATE_CHAT_LINK}")
     else:
-        update.message.reply_text("Пожалуйста, подпишитесь на канал, чтобы получить доступ к чату.")
+        await update.message.reply_text("Пожалуйста, подпишитесь на канал, чтобы получить доступ к чату.")
 
-def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+async def main():
+    application = Application.builder().token(TOKEN).build()
 
-    dp.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('start', start))
 
-    updater.start_polling()
-    updater.idle()
+    # Запуск бота
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    await application.updater.stop()
+    await application.stop()
 
-if name == 'main':
-    main()
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
