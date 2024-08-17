@@ -15,11 +15,12 @@ def start(update: Update, context: CallbackContext):
 
 dispatcher.add_handler(CommandHandler('start', start))
 
-@app.route(f'/{TOKEN}', methods=['POST'])
+@app.route('/7362610114:AAHRCtTThfAs0Q-mZjAVqlSotwiLhxlRIzs', methods=['POST'])
 def respond():
     update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     return 'ok'
+
 
 if __name__ == '__main__':
     app.run(debug=True)
